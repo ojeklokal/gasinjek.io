@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+  <title>GASINJEK - ojek lokal rangkasbitung</title>
+  <style>
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background-color: #000;
+      color: #333;
+    }
+    
+    .social-sidebar {
+      position: fixed;
+      top: 50%;
+      left: 0;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+    }
+
+    .social-sidebar a {
+      display: flex;
+      align-items: center;
+      color: white;
+      text-decoration: none;
+      padding: 12px 15px;
+      margin: 5px 0;
+      border-radius: 0 30px 30px 0;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+      transform: translateX(-70%);
+      width: max-content;
+      border: 2px solid;
+  animation: berkedip 0.5s linear infinite;
+    }
+
+    .social-sidebar a i {
+      margin-right: 10px;
+      font-size: 18px;
+    }
+
+    .social-sidebar a span {
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .social-sidebar a:hover {
+      transform: translateX(0);
+    }
+
+    .social-sidebar a:hover span {
+      opacity: 1;
+    }
+
+    /* Warna & Glow */
+    .facebook {
+      background-color: #1877f2;
+      box-shadow: 0 0 10px #1877f2;
+    }
+
+    .instagram {
+      background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+      box-shadow: 0 0 10px #fd5949;
+    }
+
+    .twitter {
+      background-color: #25d366;
+      box-shadow: 0 0 10px #25d366;
+    }
+
+    /* Responsif tetap vertikal */
+    @media (max-width: 600px) {
+      .social-sidebar {
+        top: 40%;
+        left: 0;
+        transform: translateY(-50%);
+      }
+
+      .social-sidebar a {
+        padding: 10px;
+        font-size: 14px;
+        transform: translateX(-80%);
+      }
+
+      .social-sidebar a:hover {
+        transform: translateX(0);
+      }
+
+      .social-sidebar a span {
+        display: none;
+      }
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #00000080;
+      padding: 10px 20px;
+      color: white;
+      flex-wrap: wrap;
+    }
+
+    header img {
+      height: 50px;
+    }
+
+    header a {
+      background: #25d366;
+      color: white;
+      font-size: 10px;
+      padding: 10px 15px;
+      border-radius: 5px;
+      text-decoration: none;
+      margin-top: 10px;
+      position: absolute; 
+      top: 10px; 
+      right: 10px;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 20px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .menu-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .icon-circle {
+      width: 80px;
+      height: 80px;
+      background-color: white;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: transform 0.2s;
+      border: 2px solid;
+  animation: berkedip 2s linear infinite;
+}
+    
+    
+    @keyframes berkedip {
+  0% { border-color: red; }
+  25% { border-color: yellow; }
+  50% { border-color: green; }
+  75% { border-color: blue; }
+  100% { border-color: purple; }
+}
+
+    .menu-item:hover .icon-circle {
+      transform: scale(1.05);
+    }
+
+    .icon-circle img {
+      width: 100%;
+      height: auto;
+    }
+
+    .menu-item span {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .popup-form {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .form-content {
+      background: #ffffff80;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
+
+    .form-content h5 {
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .form-content label {
+      display: block;
+      font-size: 5px;
+      font-weight: bold;
+      margin: 10px 0 5px;
+    }
+
+    .form-content input,
+    .form-content select,
+    .form-content textarea {
+      width: 100%;
+      padding: 5px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .form-content button {
+      width: 100%;
+      padding: 10px;
+      background: #25d366;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .form-content .close-btn {
+      background: #dc3545;
+      margin-top: 10px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #00000080;
+      color: white;
+      font-size: 12px;
+      margin-top: 40px;
+    }
+
+    .social-icons a {
+      margin: 0 10px;
+      color: white;
+      text-decoration: none;
+    }
+
+    @media (max-width: 500px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      header a {
+        margin-left: 0;
+      }
+    }
+    
+  .progress-bar {
+    display: none;
+    width: 100%;
+    height: 4px;
+    background: #ccc;
+    position: relative;
+    overflow: hidden;
+    margin-top: 10px;
+    border-radius: 2px;
+  }
+
+  .progress-bar::before {
+    content: '';
+    position: absolute;
+    height: 100%;
+    width: 0%;
+    background: #25d366;
+    animation: loading 2s linear forwards;
+  }
+
+  @keyframes loading {
+    0% { width: 0%; }
+    100% { width: 100%; }
+  }
+
+  .notif {
+    display: none;
+    padding: 10px;
+    background: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #badbcc;
+    border-radius: 5px;
+    margin-top: 10px;
+    text-align: center;
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  marquee {
+    color: #fff;
+    font-weight: bold;
+  }
+  
+  .testimonial-section {
+  padding: 50px 20px;
+  background: #;
+  text-align: center;
+}
+
+.testimonial-title {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  color: #fff;
+}
+
+.testimonial-slider {
+  max-width: 600px;
+  margin: auto;
+  position: relative;
+}
+
+.testimonial-item {
+  display: none;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  background: white;
+  padding: 30px 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+}
+
+.testimonial-item.active {
+  display: block;
+  opacity: 1;
+  position: relative;
+}
+
+.testimonial-item img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+  object-fit: cover;
+}
+
+.testimonial-item h4 {
+  margin: 5px 0;
+  font-size: 18px;
+  color: #0d6efd;
+}
+
+.testimonial-item p {
+  font-style: italic;
+  color: #555;
+  margin-top: 10px;
+}
+
+/* Feedback Section */
+.testimonial-feedback {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.feedback-box {
+  display: none;
+  gap: 20px;
+  align-items: center;
+  font-size: 16px;
+  color: #444;
+  background: #fff;
+  padding: 10px 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.feedback-box.active {
+  display: flex;
+}
+
+.feedback-box i.fa-star {
+  color: #ffc107;
+}
+
+.feedback-box i.fa-heart {
+  color: #e63946;
+}
+
+.driver-location {
+  padding: 40px 20px;
+  background: ;
+  text-align: center;
+  margin-top: 40px;
+}
+
+.driver-location h2 {
+  font-size: 22px;
+  margin-bottom: 20px;
+  color: #0d6efd;
+}
+
+#driverMap {
+  width: 100%;
+  max-width: 600px;
+  height: 300px;
+  margin: 0 auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+</style>
+</head>
+<body>
+<!-- Popup Gambar Iklan -->
+<div id="popupIklan" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center;
+  z-index: 9999; flex-direction: column;">
+
+  <img src="https://via.placeholder.com/350x200?text=IKLAN+GASINJEK" alt="Iklan" style="max-width: 90%; height: auto; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+  
+  <button onclick="tutupPopup()" style="margin-top: 20px; padding: 10px 20px; font-size: 16px; 
+    background-color: #25d366; color: white; border: none; border-radius: 10px; cursor: pointer;">
+    Lanjutkan ke menu
+  </button>
+</div>
+
+<!-- Musik Otomatis -->
+<audio id="musikGasinjek" src="musik.mp3" preload="auto"></audio>
+
+
+<header>
+  <img src="logohead.png" alt="Logo" />
+  <a href="https://wa.me/6285179795008" target="_blank"><i class="fa fa-android"></i> Download Apk</a>
+</header>
+
+<marquee bgcolor="blue">😎GASINJEK😉 Ojek lokal khusus wilayah rangkasbitung , untuk request order tinggal klik menu aja gaes 😉 . Untuk via aplikasi tinggal download aja ya , akses mudah tanpa daftar dan tanpa login tinggal klik isi data and kirim 😉 </marquee>
+
+<!-- Sidebar Sosial Media -->
+<div class="social-sidebar">
+  <a href="https://www.facebook.com/profile.php?id=61576888965682" class="facebook" target="_blank">
+    <i class="fa fa-facebook-f"></i><span>Facebook</span>
+  </a>
+  <a href="https://www.instagram.com/gasinjek?igsh=MXUwbmd5anF4OXN3Nw==" class="instagram" target="_blank">
+    <i class="fa fa-instagram"></i><span>Instagram</span>
+  </a>
+  <a href="https://google.com" class="twitter" target="_blank">
+    <i class="fa fa-android"></i><span>Twitter</span>
+  </a>
+</div>
+
+
+<div class="menu-grid">
+  <div class="menu-item" onclick="openForm('Perjalanan')">
+    <div class="icon-circle">
+      <img src="gasin.png" alt="Perjalanan">
+    </div>
+    <span>Perjalanan</span>
+  </div>
+  <div class="menu-item" onclick="openForm('Makanan')">
+    <div class="icon-circle">
+      <img src="gasin.png" alt="Makanan">
+    </div>
+    <span>Makanan</span>
+  </div>
+  <div class="menu-item" onclick="openForm('Antar Barang')">
+    <div class="icon-circle">
+      <img src="gasin.png" alt="Antar Barang">
+    </div>
+    <span>Antar Barang</span>
+  </div>
+    <div class="menu-item" onclick="openForm('Market')">
+    <div class="icon-circle">
+      <img src="gasin.png" alt="Market">
+    </div>
+    <span>Market</span>
+  </div>
+    <div class="menu-item">
+    <div class="icon-circle">
+      <a href="https://google.com">
+      <img src="gasin.png" alt="Informasi"></a>
+    </div>
+    <span>Informasi</span>
+  </div>
+    <div class="menu-item">
+    <div class="icon-circle">
+      <a href="https://google.com">
+      <img src="gasin.png" alt="Info Driver"></a>
+    </div>
+    <span>Info Driver</span>
+  </div>
+</div>
+
+<div class="popup-form" id="formPopup">
+  <div class="form-content">
+    <h5>Form Request Gasin</h5>
+    <label>Nama</label>
+    <input type="text" id="nama" required />
+    
+    <label>Nomor Ponsel</label>
+    <input type="tel" id="ponsel" required />
+
+    <label>Pilihan Layanan</label>
+    <select id="layanan">
+      <option>Perjalanan</option>
+      <option>Makanan</option>
+      <option>Antar Barang</option>
+      <option>Market</option>
+    </select>
+
+    <label>Pembayaran</label>
+    <select id="pembayaran">
+      <option>Tunai</option>
+      <option>Non-Tunai</option>
+    </select>
+
+    <label>Titik Jemput</label>
+    <input type="text" id="jemput" />
+
+    <label>Titik Antar</label>
+    <input type="text" id="antar" />
+
+    <label>Perkiraan Harga</label>
+    <input type="text" id="harga" />
+
+    <label>Syarat & Ketentuan</label>
+    <textarea readonly>• Harap isi data dengan benar dan sesuai tujuan penggunaan layanan dan tidak melakukan order palsu , mohon dimemgerti ya kak 🙏🏻. HATURNUHUN 🙏🏻
+    </textarea>
+    <!-- Tambahkan ini di dalam .form-content sebelum tombol submit -->
+<div class="progress-bar" id="progressBar"></div>
+<div class="notif" id="notifBerhasil">✅ Pesan berhasil dikirim ke WhatsApp!</div>
+
+    <button onclick="kirimWhatsapp()">Pesan Sekarang</button>
+    <button class="close-btn" onclick="closeForm()">Batalkan</button>
+  </div>
+</div>
+
+<section class="testimonial-section">
+  <h2 class="testimonial-title">Lima pengguna pertama</h2>
+
+  <div class="testimonial-slider" id="testimonialSlider">
+    <div class="testimonial-item active">
+      <img src="https://i.pravatar.cc/100?img=1" alt="User 1">
+      <h4>Rina Andini</h4>
+      <p>"Layanan cepat driver ramah. Haturnuhun!"</p>
+    </div>
+    <div class="testimonial-item">
+      <img src="https://i.pravatar.cc/100?img=2" alt="User 2">
+      <h4>Asep setiawan</h4>
+      <p>"Anter pesenan aman ke tujuan. Sukses selalu gasinjek"</p>
+    </div>
+    <div class="testimonial-item">
+      <img src="https://i.pravatar.cc/100?img=3" alt="User 3">
+      <h4>Siti Lestari</h4>
+      <p>"Respon driver cepet, Amanah. Sedikit lambat dimaklum cuma 1 driver hehe"</p>
+    </div>
+    <div class="testimonial-item">
+      <img src="https://i.pravatar.cc/100?img=4" alt="User 4">
+      <h4>Lukman</h4>
+      <p>"Tarifnya joss murah , kembangin kang biar driver nya gak cuma 1!"</p>
+    </div>
+    <div class="testimonial-item">
+      <img src="https://i.pravatar.cc/100?img=5" alt="User 5">
+      <h4>Nia Safitri</h4>
+      <p>Gampang order nya ga ribet. Gasin oke!"</p>
+    </div>
+  </div>
+
+  <div class="testimonial-feedback">
+    <div class="feedback-box active">
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i>
+      <span>5.0</span>
+      <i class="fa fa-thumbs-up"></i> <span>29</span>
+    </div>
+    <div class="feedback-box">
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i> 
+      <span>5.0</span>
+      <i class="fa fa-thumbs-up"></i> <span>11</span>
+    </div>
+    <div class="feedback-box">
+     <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i> 
+      <span>5.0</span>
+      <i class="fa fa-thumbs-up"></i> <span>19</span>
+    </div>
+    <div class="feedback-box">
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i> 
+      <span>5.0</span>
+      <i class="fa fa-thumbs-up"></i> <span>24</span>
+    </div>
+    <div class="feedback-box">
+     <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i>
+      <i class="fa fa-star"></i> 
+      <span>5.0</span>
+      <i class="fa fa-thumbs-up"></i> <span>17</span>
+    </div>
+  </div>
+</section>
+
+<section class="driver-location">
+  <h2>📍 Lokasi Driver </h2>
+  <div id="driverMap"></div>
+</section>
+
+<footer>
+  <marquee bgcolor="yellow" style="color:#000;" scrollamount="2">HATI HATI PENIPUAN !!!  GASINJEK hanya memiliki 1 driver sekaligus developer website dan app GASINJEK.  Apabila menemukan website ataupun aplikasi mengatasnamakan GASINJEK dengan data yang berbeda harap tidak melakukan transaksi apapun.</marquee>
+  <p></p><br>
+  📍 Jl.kuncorodjakti Kp.babakan desa pabuaran rangkasbitung lebak-banten
+<br><br>📩 gasin.siapgas@gmail.com<br><br>☎ 085179795008<br><br>
+<p>&copy; 2025 GASINJEK Rangkasbitung. All rights reserved.</p>
+</footer>
+
+<script>
+  function openForm(layananTerpilih) {
+    document.getElementById("formPopup").style.display = "flex";
+    document.getElementById("layanan").value = layananTerpilih;
+  }
+
+  function closeForm() {
+    document.getElementById("formPopup").style.display = "none";
+  }
+
+  function kirimWhatsapp() {
+    const nama = document.getElementById("nama").value;
+    const ponsel = document.getElementById("ponsel").value;
+    const layanan = document.getElementById("layanan").value;
+    const pembayaran = document.getElementById("pembayaran").value;
+    const jemput = document.getElementById("jemput").value;
+    const antar = document.getElementById("antar").value;
+    const harga = document.getElementById("harga").value;
+
+    const pesan = `Halo, saya ingin memesan layanan:\n\n` +
+      `Nama: ${nama}\nNo. HP: ${ponsel}\nLayanan: ${layanan}\n` +
+      `Pembayaran: ${pembayaran}\nTitik Jemput: ${jemput}\nTitik Antar: ${antar}\n` +
+      `Perkiraan Harga: ${harga}`;
+
+    const noWa = "6285179795008"; // Ganti dengan nomor WhatsApp Anda
+    const url = `https://wa.me/${noWa}?text=${encodeURIComponent(pesan)}`;
+    window.open(url, "_blank");
+  }
+</script>
+
+<script>
+  let index = 0;
+  const testimonials = document.querySelectorAll('.testimonial-item');
+  const feedbacks = document.querySelectorAll('.feedback-box');
+
+  function showNextTestimonial() {
+    testimonials.forEach((t, i) => {
+      t.classList.remove('active');
+      feedbacks[i].classList.remove('active');
+    });
+
+    index = (index + 1) % testimonials.length;
+    testimonials[index].classList.add('active');
+    feedbacks[index].classList.add('active');
+  }
+
+  setInterval(showNextTestimonial, 4000); // Ganti slide tiap 4 detik
+</script>
+
+<script>
+  const driverMap = L.map('driverMap').setView([-6.331407, 106.259902], 15); // Koordinat perkiraan Rangkasbitung
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(driverMap);
+
+  const driverMarker = L.marker([-6.361407, 106.259902]).addTo(driverMap)
+    .bindPopup("🛵 Driver aktif di area ini")
+    .openPopup();
+</script>
+
+<script>
+  // Menampilkan popup saat pertama kali halaman dimuat
+  document.body.style.overflow = 'hidden'; // Jangan scroll saat popup tampil
+
+  function tutupPopup() {
+    document.getElementById("popupIklan").style.display = "none";
+    document.body.style.overflow = 'auto';
+    
+    // Mulai musik saat popup ditutup
+    const musik = document.getElementById("musikGasinjek");
+    musik.play().catch((err) => {
+      console.log("Autoplay ditolak oleh browser:", err);
+    });
+  }
+</script>
+
+</body>
+</html>
